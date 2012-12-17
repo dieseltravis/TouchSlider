@@ -112,11 +112,14 @@ http://touchslider.com
 			return {
 				moving: false,
 				init: function() {
+					container.trigger(namespace + ".beforeinit");
 					scroller.bind("webkitTransitionEnd", function() {
 						toComplete();
 					});
+					container.trigger(namespace + ".afterinit");
 				},
 				to: function(toIndex, opt) {
+					container.trigger(namespace + ".beforeto", { toIndex: toIndex, opt: opt });
 					opt = opt || {};
 					if (toIndex >= slides.length) {
 						toIndex = 0;
@@ -243,17 +246,21 @@ http://touchslider.com
 
 					ret.current = toIndex;
 					changedView(toIndex);
+					container.trigger(namespace + ".afterto", { toIndex: toIndex, opt: opt });
 				},
 
 				stop: function() {
+					container.trigger(namespace + ".beforestop");
 					if (isTouchWebkit) {
 						crossLeft(scroller, crossLeft(scroller));
 					} else {
 						scroller.stop();
 					}
+					container.trigger(namespace + ".afterstop");
 				},
 
 				moveStart: function(e) {
+					container.trigger(namespace + ".beforemovestart", { e: e });
 					switching.moving = true;
 					clearTimeout(autoPlayTimeout);
 					scroller.stop();
@@ -274,9 +281,11 @@ http://touchslider.com
 							switching.leftCount = scrollerLeft + lastLeft * 3;
 						}
 					}
+					container.trigger(namespace + ".aftermovestart", { e: e });
 				},
 
 				move: function(e, previousPageX) {
+					container.trigger(namespace + ".beforemove", { e: e, previousPageX: previousPageX });
 					var diffX = e.pageX - previousPageX,
 						scrollerLeft = crossLeft(scroller),
 						first = slides.eq(inViewport[0]),
@@ -330,9 +339,11 @@ http://touchslider.com
 					}
 
 					crossLeft(scroller, scrollerLeft + diffX);
+					container.trigger(namespace + ".aftermove", { e: e, previousPageX: previousPageX });
 				},
 
 				moveEnd: function(e, pxInMs, directionX, startTime, distX, distY) {
+					container.trigger(namespace + ".beforemoveend", { e: e, pxInMs: pxInMs, directionX: directionX, startTime: startTime, distX: distX, distY: distY });
 					// TODO clear inViewport
 					var inViewportLength = inViewport.length,
 						scrollerLeft = crossLeft(scroller),
@@ -380,6 +391,7 @@ http://touchslider.com
 
 					toIndex = inViewport[toIndex];
 					switching.to(toIndex, opt);
+					container.trigger(namespace + ".aftermoveend", { e: e, pxInMs: pxInMs, directionX: directionX, startTime: startTime, distX: distX, distY: distY });
 				}
 			};
 		}());
@@ -403,20 +415,26 @@ http://touchslider.com
 
 		// set item or next
 		function step(toIndex, complete) {
+			container.trigger(namespace + ".beforestep");
 			var currentIndex = ret.current;
 			if (currentIndex !== toIndex) {
 				toIndex = toIndex !== undefined ? toIndex : currentIndex + 1;
 
 				switching.to(toIndex, { complete: complete });
 			}
+			container.trigger(namespace + ".afterstep");
 		}
 
 		function next(complete) {
+			container.trigger(namespace + ".beforenext");
 			switching.to(ret.current + 1, { dirX: 1, complete: complete });
+			container.trigger(namespace + ".afternext");
 		}
 
 		function prev(complete) {
+			container.trigger(namespace + ".beforeprev");
 			switching.to(ret.current - 1, { dirX: -1, complete: complete });
+			container.trigger(namespace + ".afterprev");
 		}
 
 		/* Autoplay */
