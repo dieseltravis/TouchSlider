@@ -1,37 +1,37 @@
 /*
-TouchSlider 0.95
+TouchSlider 0.95.3
 Licensed under the MIT license.
 http://touchslider.com
 */
 /*jslint browser: true, undef: true, sloppy: true, vars: true, white: true, nomen: true, plusplus: true, maxerr: 50, indent: 4 */
 /*global WebKitCSSMatrix: false, jQuery: false, getComputedStyle: false */
 
-(function($, undefined) {
-	window.touchSlider = function(options) {
+(function (w, $, undefined) {
+	w.touchSlider = function (options) {
 		options = options || {};
 		var namespace = options.namespace || "touchslider",
 			container = $(options.container);
 
 		if (container.length !== 1) { // 0 or >1
-			container.each(function() {
-				touchSlider({container: this});
+			container.each(function () {
+				w.touchSlider({ container: this });
 			});
 			return;
 		}
 
 		options = $.extend({
-				autoplay: false,
-				delay: 3000,
-				margin: 5,
-				viewport: "." + namespace + "-viewport",
-				prev: "." + namespace + "-prev",
-				next: "." + namespace + "-next",
-				pagination: "." + namespace + "-nav-item",
-				currentClass: namespace + "-nav-item-current",
-				duration: 350,
-				mouseTouch: true
-				// [container, scroller]
-			}, options);
+			autoplay: false,
+			delay: 3000,
+			margin: 5,
+			viewport: "." + namespace + "-viewport",
+			prev: "." + namespace + "-prev",
+			next: "." + namespace + "-next",
+			pagination: "." + namespace + "-nav-item",
+			currentClass: namespace + "-nav-item-current",
+			duration: 350,
+			mouseTouch: true
+			// [container, scroller]
+		}, options);
 
 		var ret = {
 				current: 0,
@@ -41,8 +41,10 @@ http://touchslider.com
 				start: start,
 				stop: stop
 			},
-			isTouchWebkit = "ontouchstart" in window && "WebKitCSSMatrix" in window,
-			touchstart = "touchstart", touchmove = "touchmove", touchend = "touchend",
+			isTouchWebkit = "ontouchstart" in w && "WebKitCSSMatrix" in w,
+			touchstart = "touchstart",
+			touchmove = "touchmove", 
+			touchend = "touchend",
 			viewport = $(options.viewport, container),
 			scroller = options.scroller ? $(options.scroller, container) : viewport.children(),
 			slides = scroller.children(),
@@ -73,20 +75,19 @@ http://touchslider.com
 		// crossLeft( element )
 		// crossLeft( element, pixels, [duration] )
 		// crossLeft( element, function(index), [duration] )
-		var crossLeft = isTouchWebkit
-				? function(elem, px, duration) {
+		var crossLeft = isTouchWebkit ? function (elem, px, duration) {
 					if (px === undefined) {
-						return new WebKitCSSMatrix(getComputedStyle(elem.jquery ? elem[0] : elem).webkitTransform).e;
+						return new w.WebKitCSSMatrix(w.getComputedStyle(elem.jquery ? elem[0] : elem).webkitTransform).e;
 					}
 					elem.css({
 						webkitTransitionDuration: duration ? duration + "ms" : "0",
 						// http://jsperf.com/typeof-function-vs-instanceof/3
-						webkitTransform: function(i){
+						webkitTransform: function (i) {
 							return "translate3d(" + (typeof px === "number" ? px : px.call(this, i)) + "px,0,0)";
 						}
 					});
 				}
-				: function(elem, px) {
+				: function (elem, px) {
 					if (px === undefined) {
 						return parseInt((elem.jquery ? elem[0] : elem).style.left, 10);
 					}
@@ -104,26 +105,26 @@ http://touchslider.com
 		crossLeft(slides.not(slides[0]), 10000);
 		crossLeft(slides.eq(0), 0);
 
-		var switching = (function() {
+		var switching = (function () {
 			var inViewport = [0],
 				endCoords = [0], // for calc when an animation
 				toComplete = $.noop;
 
 			return {
 				moving: false,
-				init: function() {
+				init: function () {
 					container.trigger(namespace + ".beforeinit");
-					scroller.bind("webkitTransitionEnd", function() {
+					scroller.bind("webkitTransitionEnd", function () {
 						toComplete();
 					});
 					container.trigger(namespace + ".afterinit");
 				},
-				to: function(toIndex, opt) {
-					container.trigger(namespace + ".beforeto", { toIndex: toIndex, opt: opt });
+				to: function (toIndex, opt) {
+					container.trigger({ type: namespace + ".beforeto", toIndex: toIndex, opt: opt });
 					opt = opt || {};
 					if (toIndex >= slides.length) {
 						toIndex = 0;
-					} else if (toIndex < 0){
+					} else if (toIndex < 0) {
 						toIndex = slides.length - 1;
 					}
 					var duration = options.duration,
@@ -135,11 +136,11 @@ http://touchslider.com
 					scroller.stop();
 
 					switching.moving = true;
-					clearTimeout(autoPlayTimeout);
+					w.clearTimeout(autoPlayTimeout);
 
 					if (indexInViewport !== -1) {
 						nodeLeft = endCoords[indexInViewport];
-					// add node if not exist
+						// add node if not exist
 					} else {
 						var i, nodeIndex = slides.index(node);
 						// set position in viewport
@@ -152,7 +153,7 @@ http://touchslider.com
 							endCoords.push(0);
 							inViewport.push(nodeIndex);
 						} else {
-							for (i = inViewport.length - 1; i >= 0; i--){
+							for (i = inViewport.length - 1; i >= 0; i--) {
 								if (inViewport[i] < nodeIndex) {
 									endCoords.splice(i + 1, 0, 0);
 									inViewport.splice(i + 1, 0, nodeIndex);
@@ -181,7 +182,7 @@ http://touchslider.com
 							node.css("opacity", 0);
 							// for example: inViewport = [0,1,2,3,4] and indexInViewport = 2
 							// center, [2]
-							nodeLeft = endCoords[indexInViewport+1] - Math.round((nodeWidth + options.margin) / 2);
+							nodeLeft = endCoords[indexInViewport + 1] - Math.round((nodeWidth + options.margin) / 2);
 							endCoords[indexInViewport] = nodeLeft;
 							crossLeft(node, nodeLeft);
 
@@ -194,23 +195,24 @@ http://touchslider.com
 
 							// right calc, [3,4]
 							var leftInR = nodeLeft;
-							
+
 							for (i = indexInViewport + 1; i < l; i++) {
 								leftInR += slides.eq(inViewport[i]).outerWidth() + options.margin;
 								endCoords[i] = leftInR;
 							}
 
+							var animateOptions = {
+									duration: duration,
+									queue: false,
+									complete: function () {
+										if (node.is(this)) {
+											node.animate({ opacity: 1 }, duration);
+										}
+									}
+								};
 							for (i = 0; i < l; i++) {
 								slides.eq(inViewport[i])
-									.animate({ left: endCoords[i] }, {
-										duration: duration,
-										queue: false,
-										complete: function() {
-											if (node.is(this)) {
-												node.animate({ opacity: 1 }, duration);
-											}
-										}
-									});
+									.animate({ left: endCoords[i] }, animateOptions);
 							}
 						}
 					}
@@ -219,7 +221,7 @@ http://touchslider.com
 						duration = Math.min(Math.max(Math.round(Math.abs(crossLeft(scroller)) / opt.pxInMs), 100), duration);
 					}
 
-					toComplete = function() {
+					toComplete = function () {
 						crossLeft(slides.not(node), -10000);
 						inViewport = [slides.index(node)];
 						endCoords = [nodeLeft];
@@ -234,22 +236,22 @@ http://touchslider.com
 					if (!isTouchWebkit) {
 						scroller.animate(
 							{
-								left: - nodeLeft
+								left: -nodeLeft
 							}, {
 								duration: duration,
 								queue: false,
 								complete: toComplete
-						});
+							});
 					} else {
-						crossLeft(scroller, - nodeLeft, duration);
+						crossLeft(scroller, -nodeLeft, duration);
 					}
 
 					ret.current = toIndex;
 					changedView(toIndex);
-					container.trigger(namespace + ".afterto", { toIndex: toIndex, opt: opt });
+					container.trigger({ type: namespace + ".afterto", toIndex: toIndex, opt: opt });
 				},
 
-				stop: function() {
+				stop: function () {
 					container.trigger(namespace + ".beforestop");
 					if (isTouchWebkit) {
 						crossLeft(scroller, crossLeft(scroller));
@@ -259,10 +261,10 @@ http://touchslider.com
 					container.trigger(namespace + ".afterstop");
 				},
 
-				moveStart: function(e) {
-					container.trigger(namespace + ".beforemovestart", { e: e });
+				moveStart: function (e) {
+					container.trigger({ type: namespace + ".beforemovestart", e: e });
 					switching.moving = true;
-					clearTimeout(autoPlayTimeout);
+					w.clearTimeout(autoPlayTimeout);
 					scroller.stop();
 
 					switching.startPageX = e.pageX;
@@ -281,11 +283,11 @@ http://touchslider.com
 							switching.leftCount = scrollerLeft + lastLeft * 3;
 						}
 					}
-					container.trigger(namespace + ".aftermovestart", { e: e });
+					container.trigger({ type: namespace + ".aftermovestart", e: e });
 				},
 
-				move: function(e, previousPageX) {
-					container.trigger(namespace + ".beforemove", { e: e, previousPageX: previousPageX });
+				move: function (e, previousPageX) {
+					container.trigger({ type: namespace + ".beforemove", e: e, previousPageX: previousPageX });
 					var diffX = e.pageX - previousPageX,
 						scrollerLeft = crossLeft(scroller),
 						first = slides.eq(inViewport[0]),
@@ -309,8 +311,7 @@ http://touchslider.com
 					}
 					// deceleration in left
 					if ((
-						    (diffX > 0 && scrollerLeft + endCoords[0] + diffX > 0)
-						 || (diffX < 0 && scrollerLeft + endCoords[0] > 0)
+							(diffX > 0 && scrollerLeft + endCoords[0] + diffX > 0) || (diffX < 0 && scrollerLeft + endCoords[0] > 0)
 						) && inViewport[0] === 0
 					) {
 						deceleration = Math.min(Math.round((switching.leftCount + endCoords[0]) / 4), viewport.innerWidth() / 2);
@@ -330,20 +331,19 @@ http://touchslider.com
 					}
 					// deceleration in right
 					if ((
-						    (diffX > 0 && scrollerLeft + endCoords[lastIndex] < 0)
-						 || (diffX < 0 && scrollerLeft + endCoords[lastIndex] + diffX < 0)
+							(diffX > 0 && scrollerLeft + endCoords[lastIndex] < 0) || (diffX < 0 && scrollerLeft + endCoords[lastIndex] + diffX < 0)
 						) && last.is(slides.last())
 					) {
-						deceleration = Math.max(Math.round((switching.leftCount + endCoords[lastIndex]) / 4), - viewport.innerWidth() / 2);
+						deceleration = Math.max(Math.round((switching.leftCount + endCoords[lastIndex]) / 4), -viewport.innerWidth() / 2);
 						diffX = deceleration - (scrollerLeft + endCoords[lastIndex]);
 					}
 
 					crossLeft(scroller, scrollerLeft + diffX);
-					container.trigger(namespace + ".aftermove", { e: e, previousPageX: previousPageX });
+					container.trigger({ type: namespace + ".aftermove", e: e, previousPageX: previousPageX });
 				},
 
-				moveEnd: function(e, pxInMs, directionX, startTime, distX, distY) {
-					container.trigger(namespace + ".beforemoveend", { e: e, pxInMs: pxInMs, directionX: directionX, startTime: startTime, distX: distX, distY: distY });
+				moveEnd: function (e, pxInMs, directionX, startTime, distX, distY) {
+					container.trigger({ type: namespace + ".beforemoveend", e: e, pxInMs: pxInMs, directionX: directionX, startTime: startTime, distX: distX, distY: distY });
 					// TODO clear inViewport
 					var inViewportLength = inViewport.length,
 						scrollerLeft = crossLeft(scroller),
@@ -351,17 +351,15 @@ http://touchslider.com
 						opt;
 					if (endCoords[0] + scrollerLeft > 0) { // space in left
 						toIndex = 0;
-					} else if (endCoords[inViewport.length - 1] + scrollerLeft < 0) { // space in right
-						/* nothing */
-					} else {
-						opt = {pxInMs: pxInMs};
+					} else if (endCoords[inViewport.length - 1] + scrollerLeft >= 0) { // not space in right
+						opt = { pxInMs: pxInMs };
 						// maximum area
 						var i, right,
 							maximumInViewport = inViewportLength - 1,
 							viewportWidth = viewport.innerWidth();
-						for (i = 0 ; i < inViewportLength - 1; i++ ) { // no need check last
+						for (i = 0; i < inViewportLength - 1; i++) { // no need check last
 							right = endCoords[i] + slides.eq(inViewport[i]).outerWidth() + scrollerLeft;
-							if (right > 0 && right > viewportWidth - (endCoords[i+1] + scrollerLeft)) {
+							if (right > 0 && right > viewportWidth - (endCoords[i + 1] + scrollerLeft)) {
 								maximumInViewport = i;
 								break;
 							}
@@ -372,7 +370,7 @@ http://touchslider.com
 						} else {
 							var touched = inViewportLength - 1,
 								scrollerOffsetLeft = Math.round(scroller.offset().left); // cast
-							for (i = 0; i < inViewportLength; i++ ) {
+							for (i = 0; i < inViewportLength; i++) {
 								if (endCoords[i] + scrollerOffsetLeft > e.pageX) {
 									touched = i - 1;
 									break;
@@ -382,8 +380,7 @@ http://touchslider.com
 							// 5% of diagonal
 							if (maximumInViewport === touched &&
 								e.timeStamp - startTime < 1000 &&
-								distX + distY > Math.sqrt(Math.pow(viewport.height(), 2) + Math.pow(viewportWidth, 2)) * 0.05)
-							{
+								distX + distY > Math.sqrt(Math.pow(viewport.height(), 2) + Math.pow(viewportWidth, 2)) * 0.05) {
 								toIndex = Math.max(0, Math.min(inViewportLength - 1, toIndex + directionX));
 							}
 						}
@@ -391,19 +388,19 @@ http://touchslider.com
 
 					toIndex = inViewport[toIndex];
 					switching.to(toIndex, opt);
-					container.trigger(namespace + ".aftermoveend", { e: e, pxInMs: pxInMs, directionX: directionX, startTime: startTime, distX: distX, distY: distY });
+					container.trigger({ type: namespace + ".aftermoveend", e: e, pxInMs: pxInMs, directionX: directionX, startTime: startTime, distX: distX, distY: distY });
 				}
 			};
-		}());
+		} ());
 
 		switching.init();
 
 		if (isTouchWebkit) {
 			var onFly = false;
-			scroller.bind("webkitTransitionStart", function() {
+			scroller.bind("webkitTransitionStart", function () {
 				onFly = true;
 			});
-			scroller.bind("webkitTransitionEnd", function() {
+			scroller.bind("webkitTransitionEnd", function () {
 				onFly = false;
 			});
 		}
@@ -442,12 +439,12 @@ http://touchslider.com
 			isPlay = false,
 			autoPlayTimeout;
 
-		viewport.hover(function() {
-				clearTimeout(autoPlayTimeout);
-				mouseInViewport = true;
-			}, function() {
-				mouseInViewport = false;
-				autoPlay();
+		viewport.hover(function () {
+			w.clearTimeout(autoPlayTimeout);
+			mouseInViewport = true;
+		}, function () {
+			mouseInViewport = false;
+			autoPlay();
 		});
 
 		function autoPlay() {
@@ -459,8 +456,8 @@ http://touchslider.com
 		function start() {
 			isPlay = true;
 			if (!mouseInViewport) {
-				clearTimeout(autoPlayTimeout);
-				autoPlayTimeout = setTimeout(function() {
+				w.clearTimeout(autoPlayTimeout);
+				autoPlayTimeout = w.setTimeout(function () {
 					if (!switching.moving && !mouseInViewport) {
 						next();
 					}
@@ -470,33 +467,33 @@ http://touchslider.com
 		}
 
 		function stop() {
-			clearTimeout(autoPlayTimeout);
+			w.clearTimeout(autoPlayTimeout);
 			isPlay = false;
 			return options.container;
 		}
 
 		/* Navigation */
 		// not use delegate(), for correct selection in mobile webkit
-		pagination.click(function() {
+		pagination.click(function () {
 			step(pagination.index(this));
 		});
 
 		// left/right button
-		$(options.prev, container).click(function() {
+		$(options.prev, container).click(function () {
 			prev();
 		});
 
-		$(options.next, container).click(function() {
+		$(options.next, container).click(function () {
 			next();
 		});
 
 		function initTouch() {
-			var doc = $(document), startTime, defaultPrevented,
+			var doc = $(w.document), startTime, defaultPrevented,
 				moving = false, // if mouseup in stopPropogation area
 				times, coords, // for accelerate
 				startPageX, previousPageX, distX, absDistX, startLeft,
 				startPageY, previousPageY, distY, absDistY,
-				start = function(e) {
+				start = function (e) {
 					if (e.which > 1) {
 						return;
 					}
@@ -532,7 +529,7 @@ http://touchslider.com
 
 					switching.moveStart(e);
 				},
-				touchStart = function(e) {
+				touchStart = function (e) {
 					if (e.originalEvent.touches.length !== 1) {
 						return;
 					}
@@ -541,7 +538,7 @@ http://touchslider.com
 					startPageY = previousPageY = e.pageY = e.originalEvent.touches[0].pageY;
 					absDistX = absDistY = 0;
 
-					startLeft = new WebKitCSSMatrix(window.getComputedStyle(scroller[0]).webkitTransform).e;
+					startLeft = new w.WebKitCSSMatrix(w.getComputedStyle(scroller[0]).webkitTransform).e;
 
 					coords = [0, 0, 0, startPageX];
 
@@ -550,7 +547,7 @@ http://touchslider.com
 
 					switching.moveStart(e);
 				},
-				move = function(e) {
+				move = function (e) {
 					var pageX, pageY;
 					if (e.originalEvent.touches && isTouchWebkit) {
 						if (e.originalEvent.touches.length !== 1) {
@@ -610,7 +607,7 @@ http://touchslider.com
 					previousPageY = pageY;
 
 				},
-				end = function(e) {
+				end = function (e) {
 					moving = false;
 					// mobile webkit browser fix
 					if (!e.originalEvent || e.originalEvent.touches) {
@@ -621,21 +618,21 @@ http://touchslider.com
 
 					var i = times.length, pxInMs = 0, directionX = 0; // accelerate
 					while (--i > 0) {
-						if (times[i-1]) {
+						if (times[i - 1]) {
 							var diffCoords = coords[i] - coords[i - 1];
-							pxInMs += Math.abs(diffCoords)/(times[i] - times[i - 1]);
+							pxInMs += Math.abs(diffCoords) / (times[i] - times[i - 1]);
 							if (diffCoords !== 0) {
 								directionX = diffCoords > 0 ? -1 : 1;
 							}
 						}
 					}
-					pxInMs = pxInMs/times.length;
+					pxInMs = pxInMs / times.length;
 
 					switching.moveEnd(e, pxInMs, directionX, startTime, distX, distY);
 					onFly = false;
 
 					if (distX + distY > 4) {
-						viewport.one("click", function(e) {
+						viewport.one("click", function (e) {
 							e.preventDefault();
 						});
 					}
@@ -653,10 +650,10 @@ http://touchslider.com
 		container.data(namespace, ret);
 	};
 
-	$.fn.touchSlider = function(options) {
+	$.fn.touchSlider = function (options) {
 		options = options || {};
 		options.container = this;
-		touchSlider(options);
+		w.touchSlider(options);
 		return this;
 	};
-}(jQuery));
+} (this, this.jQuery));
